@@ -825,7 +825,7 @@
 
           <tbody id="dashboardRequestBody">
           <tr>
-            <td colspan="6" class="empty">
+            <td colspan="7" class="empty">
               관리자 로그인 후 신청현황을 확인할 수 있습니다.
             </td>
           </tr>
@@ -1279,12 +1279,13 @@
               <th>입사일</th>
               <th>상태</th>
               <th>최종수정</th>
+              <th>관리</th>
             </tr>
             </thead>
 
             <tbody id="employeeBody">
             <tr>
-              <td colspan="6" class="empty">
+              <td colspan="7" class="empty">
                 관리자 로그인 후 직원목록을 확인할 수 있습니다.
               </td>
             </tr>
@@ -1803,67 +1804,67 @@ if (adminPassword) {
 
 
   async function loadMyRequests() {
-    const name = document.getElementById("historyName").value.trim();
-    const phone = document.getElementById("historyPhone").value.trim();
-    const body = document.getElementById("myRequestBody");
+  const name = document.getElementById("historyName").value.trim();
+  const phone = document.getElementById("historyPhone").value.trim();
+  const body = document.getElementById("myRequestBody");
 
-    if (!name || !phone) {
-      setResult(
-        "historyResult",
-        "이름과 연락처를 입력하세요.",
-        false
-      );
+  if (!name || !phone) {
+    setResult(
+      "historyResult",
+      "이름과 연락처를 입력하세요.",
+      false
+    );
+    return;
+  }
+
+  body.innerHTML =
+    '<tr><td colspan="8" class="empty">' +
+    "신청내역을 불러오는 중입니다." +
+    "</td></tr>";
+
+  try {
+    const result = await apiGet({
+      action: "my",
+      name: name,
+      phone: phone
+    });
+
+    if (!result.ok) {
+      throw new Error(result.message || "조회 실패");
+    }
+
+    const rows = result.rows || [];
+
+    if (!rows.length) {
+      body.innerHTML =
+        '<tr><td colspan="8" class="empty">' +
+        "신청내역이 없습니다." +
+        "</td></tr>";
       return;
     }
 
+    body.innerHTML = rows.map(function (row) {
+      return (
+        "<tr>" +
+          "<td>" + escapeHtml(row["신청일시"]) + "</td>" +
+          "<td>" + escapeHtml(row["휴가종류"]) + "</td>" +
+          "<td>" + escapeHtml(row["시작일"]) + "</td>" +
+          "<td>" + escapeHtml(row["종료일"]) + "</td>" +
+          "<td>" + escapeHtml(row["사용일수"]) + "</td>" +
+          "<td>" + escapeHtml(row["사유"] || "-") + "</td>" +
+          "<td>" + getStatusBadge(row["상태"]) + "</td>" +
+          "<td>" + escapeHtml(row["관리자메모"] || "-") + "</td>" +
+        "</tr>"
+      );
+    }).join("");
+
+  } catch (error) {
     body.innerHTML =
       '<tr><td colspan="8" class="empty">' +
-      "신청내역을 불러오는 중입니다." +
+      escapeHtml(error.message) +
       "</td></tr>";
-
-    try {
-      const result = await apiGet({
-        action: "my",
-        name: name,
-        phone: phone
-      });
-
-      if (!result.ok) {
-        throw new Error(result.message || "조회 실패");
-      }
-
-      const rows = result.rows || [];
-
-      if (!rows.length) {
-        body.innerHTML =
-          '<tr><td colspan="8" class="empty">' +
-          "신청내역이 없습니다." +
-          "</td></tr>";
-        return;
-      }
-
-      body.innerHTML = rows.map(function (row) {
-        return (
-          "<tr>" +
-            "<td>" + escapeHtml(row["신청일시"]) + "</td>" +
-            "<td>" + escapeHtml(row["휴가종류"]) + "</td>" +
-            "<td>" + escapeHtml(row["시작일"]) + "</td>" +
-            "<td>" + escapeHtml(row["종료일"]) + "</td>" +
-            "<td>" + escapeHtml(row["사용일수"]) + "</td>" +
-            "<td>" + escapeHtml(row["사유"] || "-") + "</td>" +
-            "<td>" + getStatusBadge(row["상태"]) + "</td>" +
-            "<td>" + escapeHtml(row["관리자메모"] || "-") + "</td>" +
-          "</tr>"
-        );
-      }).join("");
-
-    } catch (error) {
-      body.innerHTML =
-        '<tr><td colspan="8" class="empty">' +
-        escapeHtml(error.message) +
-        "</td></tr>";
-    }
   }
+}
 
 
   async function adminLogin() {
@@ -2100,7 +2101,7 @@ if (adminPassword) {
 
     if (!recent.length) {
       body.innerHTML =
-        '<tr><td colspan="6" class="empty">' +
+        '<tr><td colspan="7" class="empty">' +
         "신청내역이 없습니다." +
         "</td></tr>";
       return;
@@ -2289,7 +2290,7 @@ if (adminPassword) {
     const body = document.getElementById("employeeBody");
 
     body.innerHTML =
-      '<tr><td colspan="6" class="empty">' +
+      '<tr><td colspan="7" class="empty">' +
       "직원목록을 불러오는 중입니다." +
       "</td></tr>";
 
@@ -2320,49 +2321,89 @@ if (adminPassword) {
 
 
   function renderEmployees() {
-    const body = document.getElementById("employeeBody");
 
-    const keyword =
-      document.getElementById("employeeKeyword").value
-        .trim()
-        .toLowerCase();
+  const body = document.getElementById("employeeBody");
 
-    const rows = employeeRows.filter(function (row) {
-      const text = [
-        row.store,
-        row.name,
-        row.phone,
-        row.status
-      ].join(" ").toLowerCase();
+  const keyword =
+    document.getElementById("employeeKeyword").value
+      .trim()
+      .toLowerCase();
 
-      return !keyword || text.includes(keyword);
-    });
+  const rows = employeeRows.filter(function(row){
 
-    if (!rows.length) {
-      body.innerHTML =
-        '<tr><td colspan="6" class="empty">' +
-        "등록된 직원이 없습니다." +
-        "</td></tr>";
-      return;
-    }
+    const text = [
+      row.store,
+      row.name,
+      row.phone,
+      row.status
+    ].join(" ").toLowerCase();
 
-    body.innerHTML = rows.map(function (row) {
-      return (
-        "<tr>" +
-          "<td>" + escapeHtml(row.store) + "</td>" +
-          "<td>" + escapeHtml(row.name) + "</td>" +
-          "<td>" + escapeHtml(row.phone) + "</td>" +
-          "<td>" + escapeHtml(row.hireDate) + "</td>" +
-          "<td>" +
-            '<span class="badge badge-active">' +
-            escapeHtml(row.status) +
-            "</span>" +
-          "</td>" +
-          "<td>" + escapeHtml(row.updatedAt) + "</td>" +
-        "</tr>"
-      );
-    }).join("");
+    return !keyword || text.includes(keyword);
+
+  });
+
+  if(!rows.length){
+
+    body.innerHTML =
+      '<tr><td colspan="7" class="empty">' +
+      '등록된 직원이 없습니다.' +
+      '</td></tr>';
+
+    return;
   }
+
+  body.innerHTML = rows.map(function(row){
+
+    return (
+
+      "<tr>" +
+
+        "<td>" + escapeHtml(row.store) + "</td>" +
+
+        "<td>" + escapeHtml(row.name) + "</td>" +
+
+        "<td>" + escapeHtml(formatEmployeePhone(row.phone)) + "</td>" +
+
+        "<td>" + escapeHtml(row.hireDate) + "</td>" +
+
+        "<td>" +
+          '<span class="badge badge-active">' +
+          escapeHtml(row.status) +
+          "</span>" +
+        "</td>" +
+
+        "<td>" + escapeHtml(row.updatedAt) + "</td>" +
+
+        "<td>" +
+
+          (
+            row.status === "재직"
+
+            ?
+
+            '<button class="btn btn-red btn-small" ' +
+            'onclick="retireEmployee(\'' +
+            encodeURIComponent(row.store) + '\',\'' +
+            encodeURIComponent(row.name) + '\',\'' +
+            encodeURIComponent(row.phone) +
+            '\')">' +
+            '퇴사처리' +
+            '</button>'
+
+            :
+
+            '<span class="badge badge-rejected">퇴사</span>'
+
+          ) +
+
+                "</td>" +
+
+      "</tr>"
+    );
+
+  }).join("");
+
+}
 
 
   async function loadLedger() {
@@ -2687,6 +2728,37 @@ async function retireEmployeeFromApply(index) {
       error.message || "퇴사처리 중 오류가 발생했습니다."
     );
   }
+}
+async function retireEmployee(store, name, phone){
+
+  if(!confirm(name + " 직원을 퇴사처리하시겠습니까?")){
+    return;
+  }
+
+  try{
+
+    const result = await apiPost({
+      action: "retireEmployee",
+      password: adminPassword,
+      store: decodeURIComponent(store),
+      name: decodeURIComponent(name),
+      phone: decodeURIComponent(phone)
+    });
+
+    if(!result.ok){
+      throw new Error(result.message);
+    }
+
+    alert(result.message);
+
+    loadEmployees();
+    loadLedger();
+    loadActiveEmployees();
+
+  }catch(err){
+    alert(err.message);
+  }
+
 }
 </script>
 
