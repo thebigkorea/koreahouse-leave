@@ -1135,40 +1135,43 @@
         </div>
 
         <div class="toolbar">
-          <input
-            id="requestKeyword"
-            placeholder="이름·연락처·신청번호"
-            oninput="renderAdminRequests()"
-          >
 
-          <select id="requestStatus"
-                  onchange="renderAdminRequests()">
-            <select id="requestStatus"
-        onchange="renderAdminRequests()">
-  <option value="대기" selected>승인 대기</option>
-  <option value="전체">전체 상태</option>
-  <option value="승인">승인 완료</option>
-  <option value="반려">반려</option>
-</select>
-          </select>
+  <input
+    id="requestKeyword"
+    placeholder="이름·연락처·신청번호"
+    oninput="renderAdminRequests()"
+  >
 
-          <input
-            id="requestStartDate"
-            type="date"
-            onchange="renderAdminRequests()"
-          >
+  <select
+    id="requestStatus"
+    onchange="renderAdminRequests()"
+  >
+    <option value="대기" selected>승인 대기</option>
+    <option value="전체">전체 상태</option>
+    <option value="승인">승인 완료</option>
+    <option value="반려">반려</option>
+  </select>
 
-          <input
-            id="requestEndDate"
-            type="date"
-            onchange="renderAdminRequests()"
-          >
+  <input
+    id="requestStartDate"
+    type="date"
+    onchange="renderAdminRequests()"
+  >
 
-          <button class="btn btn-secondary"
-                  onclick="resetRequestSearch()">
-            초기화
-          </button>
-        </div>
+  <input
+    id="requestEndDate"
+    type="date"
+    onchange="renderAdminRequests()"
+  >
+
+  <button
+    class="btn btn-secondary"
+    onclick="resetRequestSearch()"
+  >
+    초기화
+  </button>
+
+</div>
 
         <div class="table-wrap">
           <table>
