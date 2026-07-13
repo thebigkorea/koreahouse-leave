@@ -1143,10 +1143,13 @@
 
           <select id="requestStatus"
                   onchange="renderAdminRequests()">
-            <option value="전체">전체 상태</option>
-            <option value="대기">대기</option>
-            <option value="승인">승인</option>
-            <option value="반려">반려</option>
+            <select id="requestStatus"
+        onchange="renderAdminRequests()">
+  <option value="대기" selected>승인 대기</option>
+  <option value="전체">전체 상태</option>
+  <option value="승인">승인 완료</option>
+  <option value="반려">반려</option>
+</select>
           </select>
 
           <input
@@ -2063,7 +2066,7 @@ if (adminPassword) {
 
   function resetRequestSearch() {
     document.getElementById("requestKeyword").value = "";
-    document.getElementById("requestStatus").value = "전체";
+    document.getElementById("requestStatus").value = "대기";
     document.getElementById("requestStartDate").value = "";
     document.getElementById("requestEndDate").value = "";
 
@@ -2588,15 +2591,7 @@ function renderActiveEmployees() {
   }
 
   listBox.innerHTML = rows.map(function(employee, index) {
-    const retireButton = adminPassword
-      ? (
-        '<button class="employee-retire-btn" ' +
-        'onclick="event.stopPropagation(); ' +
-        'retireEmployeeFromApply(' + index + ')">' +
-        '퇴사처리' +
-        '</button>'
-      )
-      : "";
+    const retireButton = "";
 
     return (
       '<div class="employee-select-item">' +
@@ -2680,55 +2675,7 @@ function formatEmployeePhone(phone) {
    신청화면 직원 퇴사처리
 ========================= */
 
-async function retireEmployeeFromApply(index) {
-  if (!adminPassword) {
-    alert("관리자 로그인 후 퇴사처리할 수 있습니다.");
-    openPage("admin");
-    return;
-  }
 
-  const employee = activeEmployeeRows[index];
-
-  if (!employee) {
-    alert("직원정보를 찾을 수 없습니다.");
-    return;
-  }
-
-  const confirmed = confirm(
-    employee.name +
-    " 직원을 퇴사 처리하시겠습니까?\n\n" +
-    "직원 원장은 보존되며 신청목록에서는 제외됩니다."
-  );
-
-  if (!confirmed) return;
-
-  try {
-    const result = await apiPost({
-      action: "retireEmployee",
-      password: adminPassword,
-      store: employee.store,
-      name: employee.name,
-      phone: employee.phone
-    });
-
-    if (!result.ok) {
-      throw new Error(
-        result.message || "퇴사처리 실패"
-      );
-    }
-
-    alert(result.message);
-
-    await loadActiveEmployees();
-    await loadEmployees();
-    await loadLedger();
-
-  } catch (error) {
-    alert(
-      error.message || "퇴사처리 중 오류가 발생했습니다."
-    );
-  }
-}
 async function retireEmployee(store, name, phone){
 
   if(!confirm(name + " 직원을 퇴사처리하시겠습니까?")){
